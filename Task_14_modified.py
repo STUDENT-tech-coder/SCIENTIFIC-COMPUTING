@@ -1,0 +1,20 @@
+import numpy as np, matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+print("--- PARAMETER CHANGE: linear model instead of quadratic ---")
+u=np.array([50,100,150,200,250,300,350.]); y=np.array([82,95,115,145,185,238,305.])
+quad=lambda x,a,b,c:a*x**2+b*x+c; lin=lambda x,m,c:m*x+c
+pq,_=curve_fit(quad,u,y); pl,_=curve_fit(lin,u,y)
+rm=lambda f,p: np.sqrt(np.mean((y-f(u,*p))**2))
+print(f"Quadratic RMSE {rm(quad,pq):.2f} ms | prediction @400: {quad(400,*pq):.1f} ms")
+print(f"Linear    RMSE {rm(lin,pl):.2f} ms | prediction @400: {lin(400,*pl):.1f} ms")
+print("--- RELATED CASE: maize height growth curve (logistic) ---")
+w=np.arange(1,11.); hgt=np.array([8,15,26,42,65,92,118,140,155,163.])
+logi=lambda t,L,k,t0: L/(1+np.exp(-k*(t-t0)))
+p,cov=curve_fit(logi,w,hgt,p0=[170,0.6,6])
+pred=logi(w,*p); rmse=np.sqrt(np.mean((hgt-pred)**2)); ss=1-np.sum((hgt-pred)**2)/np.sum((hgt-hgt.mean())**2)
+print(f"L={p[0]:.1f} cm, k={p[1]:.3f}/week, midpoint t0={p[2]:.2f} weeks | RMSE {rmse:.2f} cm | R^2 {ss:.4f}")
+print(f"Predicted height at week 12: {logi(12,*p):.1f} cm")
+print("Parameter standard errors:", np.round(np.sqrt(np.diag(cov)),3))
+x=np.linspace(1,12,200)
+plt.scatter(w,hgt,label="Measured"); plt.plot(x,logi(x,*p),label="Logistic fit")
+plt.xlabel("Weeks after planting"); plt.ylabel("Height (cm)"); plt.title("Maize growth curve"); plt.legend(); plt.grid(True); plt.show()
